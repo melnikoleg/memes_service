@@ -1,0 +1,99 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+    image: memes_service:${MEMES_SERVICE_VERSION:-latest}
+    restart: always
+    volumes:
+    - ~/path/on/host:/path/on/container
+    env_file:
+    - env/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MEMES_SERVICE_HOST: 0.0.0.0
+      MEMES_SERVICE_DB_HOST: memes_service-db
+      MEMES_SERVICE_DB_PORT: 5432
+      MEMES_SERVICE_DB_USER: memes_service
+      MEMES_SERVICE_DB_PASS: memes_service
+      MEMES_SERVICE_DB_BASE: memes_service
+
+    command: ["/usr/local/bin/python", "-m", "memes_service"]
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./deploy/Dockerfile
+    image: memes_service:${MEMES_SERVICE_VERSION:-latest}
+    restart: always
+    env_file:
+    - env/.env
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      MEMES_SERVICE_DB_HOST: memes_service-db
+      MEMES_SERVICE_DB_PORT: 5432
+      MEMES_SERVICE_DB_USER: memes_service
+      MEMES_SERVICE_DB_PASS: memes_service
+      MEMES_SERVICE_DB_BASE: memes_service
+
+    command: ["/usr/local/bin/python", "memes_service/worker.py"]
+
+
+  db:
+    image: postgres:13.6-bullseye
+    hostname: memes_service-db
+    environment:
+      POSTGRES_PASSWORD: "memes_service"
+      POSTGRES_USER: "memes_service"
+      POSTGRES_DB: "memes_service"
+    ports:
+    - "5432:5432"
+    volumes:
+    - memes_service-db-data:/var/lib/postgresql/data
+    restart: always
+    healthcheck:
+      test: pg_isready -U memes_service
+      interval: 2s
+      timeout: 3s
+      retries: 40
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+
+  migrator:
+    image: memes_service:${MEMES_SERVICE_VERSION:-latest}
+    restart: "no"
+    command: alembic upgrade head
+    environment:
+      MEMES_SERVICE_DB_HOST: memes_service-db
+      MEMES_SERVICE_DB_PORT: 5432
+      MEMES_SERVICE_DB_USER: memes_service
+      MEMES_SERVICE_DB_PASS: memes_service
+      MEMES_SERVICE_DB_BASE: memes_service
+    depends_on:
+      db:
+        condition: service_healthy
+
+  redis:
+    image: bitnami/redis:6.2.5
+    hostname: "memes_service-redis"
+    restart: always
+    environment:
+      ALLOW_EMPTY_PASSWORD: "yes"
+    healthcheck:
+      test: redis-cli ping
+      interval: 1s
+      timeout: 3s
+      retries: 50
+    ports:
+    - "6379:6379"
+
+
+volumes:
+  memes_service-db-data:
+    name: memes_service-db-data
