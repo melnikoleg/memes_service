@@ -1,3 +1,4 @@
+import datetime
 from typing import List, Optional
 
 from sqlalchemy import func, select
@@ -10,16 +11,17 @@ class MemesDAO:
     def __init__(self):
         self.session = get_session()
 
-    async def add_meme(self, path: str):
-        meme = MemesModel(path=path)
+    async def add_meme(self, path: str) -> MemesModel:
+        meme = MemesModel(path=path, created_date=datetime.datetime.now())
         self.session.add(meme)
+        await self.session.commit()
+        await self.session.refresh(meme)
+        return meme
 
     async def get_memes(self, limit: int, offset: int) -> List[MemesModel]:
-
         memes = await self.session.execute(
             select(MemesModel).limit(limit).offset(offset),
         )
-
         return memes.scalars().fetchall()
 
     async def get_memes_by_ids(
@@ -42,7 +44,6 @@ class MemesDAO:
         self,
         meme_id: int,
     ) -> Optional[MemesModel]:
-
         query = select(MemesModel)
         query = query.where(MemesModel.id == meme_id)
         rows = await self.session.execute(query)

@@ -6,11 +6,12 @@ services:
       context: .
       dockerfile: ./deploy/Dockerfile
     image: memes_service:${MEMES_SERVICE_VERSION:-latest}
+    hostname: memes_service
     restart: always
-    volumes:
-    - ~/path/on/host:/path/on/container
     env_file:
-    - env/.env
+    - .env
+    ports:
+    - "8000:8000"
     depends_on:
       db:
         condition: service_healthy
@@ -30,8 +31,10 @@ services:
       dockerfile: ./deploy/Dockerfile
     image: memes_service:${MEMES_SERVICE_VERSION:-latest}
     restart: always
+    volumes:
+    - ~/PycharmProjects/models:/app/src/models
     env_file:
-    - env/.env
+    - .env
     depends_on:
       db:
         condition: service_healthy
@@ -75,6 +78,8 @@ services:
       MEMES_SERVICE_DB_USER: memes_service
       MEMES_SERVICE_DB_PASS: memes_service
       MEMES_SERVICE_DB_BASE: memes_service
+    env_file:
+    - .env
     depends_on:
       db:
         condition: service_healthy
@@ -93,7 +98,26 @@ services:
     ports:
     - "6379:6379"
 
+  memes_tg_frontend:
+    image: memes_tg_frontend
+    depends_on:
+    - redis
+    ports:
+    - "8443:8443"
+
+  clip_service:
+    image: clip_service
+    restart: always
+    environment:
+      CLIP_SERVICE_HOST: 0.0.0.0
+      CLIP_SERVICE_MODEL_PATH: clip_service/clip_models/clip_visual.onnx
+      CLIP_SERVICE_PORT: 8002
+
+    ports:
+    - "8002:8002"
+
 
 volumes:
+  minio-storage:
   memes_service-db-data:
     name: memes_service-db-data

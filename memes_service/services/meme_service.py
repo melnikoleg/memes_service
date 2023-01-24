@@ -12,8 +12,11 @@ class MemesService:
         self.__memes_dao = MemesDAO()
         self.__reactions_dao = ReactionsDAO()
 
-    def add_meme_to_db(self, path: str):
-        self.__memes_dao.add_meme(path)
+    async def add_memes_to_db(self, paths: List[str]) -> List[MemesModel]:
+        memes_list = []
+        for path in paths:
+            memes_list.append(await self.__memes_dao.add_meme(path))
+        return memes_list
 
     async def get_meme_from_db(self, meme_id: int) -> MemesModel:
         return await self.__memes_dao.get_meme(meme_id)

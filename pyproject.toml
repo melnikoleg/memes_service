@@ -27,6 +27,9 @@ redis = {version = "^4.3.3", extras = ["hiredis"]}
 annoy = "1.17.1"
 APScheduler = "3.9.1.post1"
 numpy =  "1.23.4"
+boto3 = "^1.26.27"
+beautifulsoup4 = "^4.11.1"
+PySnooper = "^1.1.1"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.0"

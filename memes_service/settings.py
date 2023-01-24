@@ -55,6 +55,10 @@ class Settings(BaseSettings):
     redis_pass: Optional[str] = None
     redis_base: Optional[int] = None
 
+    ACCESS_KEY_ID: str
+    SECRET_ACCESS_KEY: str
+    ENDPOINT: str
+
     @property
     def db_url(self) -> URL:
         """

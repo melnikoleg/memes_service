@@ -12,4 +12,4 @@ class MemesModel(Base):
 
     id = Column(Integer(), primary_key=True, autoincrement=True)
     path = Column(String(length=200))
-    created_date = Column(DateTime, default=datetime.datetime.now)
+    created_date = Column(DateTime, default=datetime.datetime.now())

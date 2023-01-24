@@ -11,6 +11,7 @@ from sqlalchemy.orm import sessionmaker
 
 from memes_service.db.meta import meta
 from memes_service.db.models import load_all_models
+from memes_service.services.lifetime import init_storage_service
 from memes_service.services.redis.lifetime import init_redis, shutdown_redis
 from memes_service.settings import settings
 
@@ -65,6 +66,7 @@ def register_startup_event(
         _setup_db(app)
         await _create_tables()
         init_redis(app)
+        init_storage_service(app)
         pass  # noqa: WPS420
 
     return _startup
